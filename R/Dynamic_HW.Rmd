@@ -1,0 +1,62 @@
+---
+title: "dynamic_hw"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Introduction:
+
+Following from last homework I will continue to evaluate the "goodness" of my new speakers.
+
+A key consideration when designing a speaker is the lobbing effect. Lobbing is essentially the interference pattern caused when two or more acoustic transducers produce a sound wave. As those waves radiate out they will interfere with one another - and hence the lobbing interference pattern. There are several attributes, both mechanically and electrically, that define a lobbing pattern - but here I will ignore the theory and just graph some data.
+
+Typically lobbing is expressed at a given frequency - I however was interested in the sound pressure level radiation pattern. In particular how my room acoustic added to the interference pattern.
+
+## Data Collection:
+
+The Python files in this repo were used to gather the data. The procedure was as follows:
+
+1) Place the microphone 1m away from the center of the speaker at {-45°, -30°, -15°, 0°, 15°, 30°, 45°} off axis both horizontally and vertically for a total of 49 listening positions
+2) For each listening position record 30 0.1 second samples of white-noise (uniform power density 20Hz-20kHz)
+3) Perform an FFT on each of the 30 samples per listening positions and average the FFTs
+4) With an averages FFT calculate the total power of the waveform captured converting to watts
+5) Convert wattage to SPL using manufacture provided speaker efficiency
+
+The white-noise and all samples were played/recorded at 44.1kHz 16bit with no compression.
+
+## R Code
+
+
+```{r}
+library(plotly)
+
+# The supporting Python files do a lot of the heavy lifting for pre-processing the data.
+
+speaker_data = read.csv("/Users/brendo/repos/dynamic-graphs-brendo61-byte/Python/speaker_data.csv")
+db_levels = read.csv("/Users/brendo/repos/dynamic-graphs-brendo61-byte/Python/db_levels.csv")
+db_levels = matrix(as.numeric(unlist(db_levels)),nrow=nrow(db_levels))
+db_levels = db_levels[, 2:8]
+
+fig <- plot_ly(x = sort(unique(speaker_data$x)), y = sort(unique(speaker_data$y)), z = db_levels) %>% 
+  add_surface() %>% 
+  layout(scene = list(xaxis=list(title="Horizontal Off Axis (°)"),
+                      yaxis=list(title="Vertical Off Axis (°)"),
+                      zaxis=list(title="SPL (dB)")),
+         title = "Speaker SPL Lobbing Pattern")
+
+fig
+```
+
+
+## Interpreting Results
+
+What was the most impressive was the vertical off axis response; SPL is not affected by vertical angle. Now, as a human with ears I can confidently say the *sound* changes so perhaps a frequency breakdown is also needed; but from the figure above SPL is only dependent on horizontal angle.
+
+The two valleys at ±15° horizontally are to be expected as this shape is typical of a two-way design; i.e. tweeter and woofer. What is interesting here is that this shape is typical for for a two-way design where the two transducers are vertically stacked - for speaker being testing the transducers are in the same horizontal plane. It stands to reason that the radiation pattern would be rotated 90° and the above figure supports that hypothesis.
+
+If the microphone were to be placed 1 meter from the speaker at 60° it would be in the wall. While in the opposite direction the room opens up. These *hard* and *soft* surfaces could highlight the non symmetric nature across the horizontal plane.
+
+

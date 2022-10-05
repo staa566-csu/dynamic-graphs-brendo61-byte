@@ -1,0 +1,6 @@
+venv/
+.DS_Store
+.idea/
+Python/.DS_Store
+Python/__pycache__/
+speaker_samples/
